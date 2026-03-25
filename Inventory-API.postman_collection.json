@@ -1,0 +1,283 @@
+{
+	"info": {
+		"name": "Inventory API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Categories",
+			"item": [
+				{
+					"name": "1. Create Category",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Dien thoai\",\n    \"image\": \"https://i.imgur.com/R3iobJA.jpeg\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/v1/categories",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["api", "v1", "categories"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"pm.collectionVariables.set('categoryId', jsonData._id);",
+									"console.log('categoryId saved:', jsonData._id);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Get All Categories",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "http://localhost:3000/api/v1/categories",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["api", "v1", "categories"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.length > 0) {",
+									"    pm.collectionVariables.set('categoryId', jsonData[0]._id);",
+									"    console.log('categoryId saved:', jsonData[0]._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Products",
+			"item": [
+				{
+					"name": "2. Create Product (auto tao Inventory)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"San pham test inventory\",\n    \"price\": 50000,\n    \"description\": \"Mo ta san pham\",\n    \"category\": \"{{categoryId}}\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/v1/products",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["api", "v1", "products"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"pm.collectionVariables.set('productId', jsonData._id);",
+									"console.log('productId saved:', jsonData._id);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Get All Products",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "http://localhost:3000/api/v1/products",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["api", "v1", "products"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Inventory",
+			"item": [
+				{
+					"name": "3. Get All Inventories",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "http://localhost:3000/api/v1/inventory",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["api", "v1", "inventory"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.length > 0) {",
+									"    pm.collectionVariables.set('inventoryId', jsonData[0]._id);",
+									"    console.log('inventoryId saved:', jsonData[0]._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "4. Get Inventory By ID",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "http://localhost:3000/api/v1/inventory/{{inventoryId}}",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["api", "v1", "inventory", "{{inventoryId}}"]
+						}
+					}
+				},
+				{
+					"name": "5. Add Stock (stock +100)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"product\": \"{{productId}}\",\n    \"quantity\": 100\n}"
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/v1/inventory/add_stock",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["api", "v1", "inventory", "add_stock"]
+						}
+					}
+				},
+				{
+					"name": "6. Remove Stock (stock -10)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"product\": \"{{productId}}\",\n    \"quantity\": 10\n}"
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/v1/inventory/remove_stock",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["api", "v1", "inventory", "remove_stock"]
+						}
+					}
+				},
+				{
+					"name": "7. Reservation (stock -20, reserved +20)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"product\": \"{{productId}}\",\n    \"quantity\": 20\n}"
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/v1/inventory/reservation",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["api", "v1", "inventory", "reservation"]
+						}
+					}
+				},
+				{
+					"name": "8. Sold (reserved -5, soldCount +5)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"product\": \"{{productId}}\",\n    \"quantity\": 5\n}"
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/v1/inventory/sold",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "3000",
+							"path": ["api", "v1", "inventory", "sold"]
+						}
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "productId",
+			"value": ""
+		},
+		{
+			"key": "inventoryId",
+			"value": ""
+		},
+		{
+			"key": "categoryId",
+			"value": ""
+		}
+	]
+}

@@ -1,15 +1,15 @@
 var express = require('express');
 var router = express.Router();
 const slugify = require('slugify');
-let productModel = require('../schemas/products')
+let productModel = require('../schemas/products');
+let inventoryController = require('../controllers/inventory');
 
-/* GET users listing. */
-router.get('/', async function (req, res, next) {
+router.get('/', async function (req, res) {
   let queries = req.query;
-  let titleQ = queries.titl ? queries.title : "";
+  let titleQ = queries.title ? queries.title : '';
   let minPrice = queries.min ? queries.min : 0;
-  let maxPrice = queries.max ? queries.max : 10000;
-  console.log(queries);
+  let maxPrice = queries.max ? queries.max : 999999999;
+
   let result = await productModel.find(
     {
       isDeleted: false,
@@ -21,29 +21,30 @@ router.get('/', async function (req, res, next) {
     }
   ).populate({
     path: 'category',
-    select: "name"
-  })
+    select: 'name'
+  });
+
   res.send(result);
 });
-///api/v1/products/id
-router.get('/:id', async function (req, res, next) {
+
+router.get('/:id', async function (req, res) {
   try {
-    let id = req.params.id;
-    let result = await productModel.findById(id);
+    let result = await productModel.findById(req.params.id);
     if (!result || result.isDeleted) {
-      res.status(404).send({
-        message: "ID NOT FOUND"
+      return res.status(404).send({
+        message: 'ID NOT FOUND'
       });
-    } else {
-      res.send(result)
     }
+
+    res.send(result);
   } catch (error) {
     res.status(404).send({
-      message: "ID NOT FOUND"
+      message: 'ID NOT FOUND'
     });
   }
 });
-router.post('/', async function (req, res, next) {
+
+router.post('/', async function (req, res) {
   let newProduct = new productModel({
     title: req.body.title,
     slug: slugify(req.body.title, {
@@ -55,62 +56,57 @@ router.post('/', async function (req, res, next) {
     description: req.body.description,
     images: req.body.images,
     category: req.body.category
-  })
-  await newProduct.save();
-  res.send(newProduct)
-})
-router.put('/:id', async function (req, res, next) {
-  //cach 1
-  // try {
-  //   let id = req.params.id;
-  //   let result = await productModel.findById(id);
-  //   if (!result || result.isDeleted) {
-  //     res.status(404).send({
-  //       message: "ID NOT FOUND"
-  //     });
-  //   } else {
-  //     let keys = Object.keys(req.body);
-  //     for (const key of keys) {
-  //       result[key] = req.body[key];
-  //     }
-  //     await result.save();
-  //     res.send(result)
-  //   }
-  // } catch (error) {
-  //   res.status(404).send({
-  //     message: "ID NOT FOUND"
-  //   });
-  // }
-  //cach 2
+  });
+
   try {
-    let id = req.params.id;
-    let result = await productModel.findByIdAndUpdate(
-      id, req.body, {
-      new: true
-    })
-    res.send(result)
-  } catch (error) {
-    res.status(404).send(error)
-  }
-})
-router.delete('/:id', async function (req, res, next) {
-  try {
-    let id = req.params.id;
-    let result = await productModel.findById(id);
-    if (!result || result.isDeleted) {
-      res.status(404).send({
-        message: "ID NOT FOUND"
-      });
-    } else {
-      result.isDeleted = true;
-      await result.save();
-      res.send(result)
+    await newProduct.save();
+
+    try {
+      await inventoryController.CreateInventory(newProduct._id);
+    } catch (error) {
+      await productModel.findByIdAndDelete(newProduct._id).catch(function () { });
+      throw error;
     }
+
+    res.status(201).send(newProduct);
+  } catch (error) {
+    res.status(400).send({ message: error.message });
+  }
+});
+
+router.put('/:id', async function (req, res) {
+  try {
+    let result = await productModel.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      {
+        new: true
+      }
+    );
+
+    res.send(result);
+  } catch (error) {
+    res.status(404).send(error);
+  }
+});
+
+router.delete('/:id', async function (req, res) {
+  try {
+    let result = await productModel.findById(req.params.id);
+    if (!result || result.isDeleted) {
+      return res.status(404).send({
+        message: 'ID NOT FOUND'
+      });
+    }
+
+    result.isDeleted = true;
+    await result.save();
+    res.send(result);
   } catch (error) {
     res.status(404).send({
-      message: "ID NOT FOUND"
+      message: 'ID NOT FOUND'
     });
   }
-})
-module.exports = router;
+});
 
+module.exports = router;
